@@ -87,14 +87,13 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
         atk_p = loc.renju.get_build_points(loc.point, loc.i)
         return [atk_p[random.randint(0, len(atk_p) - 1)]], []  # 随机选一个就可以了
 
-    elif len(self["sleep3"]) > 0 and len(self["live2"]) > 0 and not (only_four ^ only_three):
+    elif len(self["sleep3"]) > 0 and len(self["live2"]) > 0:
         # 不是在计算VCT或VCF
         p_c4, p_l3, p_43, p_33 = set(), set(), set(), set()
         for loc in self["sleep3"]:
             p_ = set(loc.renju.get_build_points(loc.point, loc.i))
             if len(p_44 := p_ & p_c4) > 0:  # 存在四四点，必胜了
-                print("存在四四点!")
-                return [p_44[random.randint(0, len(p_44) - 1)]], []
+                return list(p_44)[:1], []
             p_c4 = p_c4 | p_  # 合并冲四点
 
         for loc in self["live2"]:
@@ -103,21 +102,19 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
             p_33 = p_33 | (p_l3 & p_)  # 三三点
             p_l3 = p_l3 | p_
 
-        if len(p_43) > 0:
-            print("存在四三点!")
-            if (p := vcf(checkerboard, self_is_black, max_depth=6)) is not None:
-                # 计算VCF，确认是否能四三杀,深度并不需要太深
-                print("VCF成功!")
-                return [p], []
-            print("VCF失败!")
+        def_p = set()
+        for loc in enemy["sleep3"]:
+            def_p = def_p | set(loc.renju.get_build_points(loc.point, loc.i))
 
-        if len(p_33) > 0:
-            print("存在三三点!")
-            if (p := vct(checkerboard, self_is_black, max_depth=6)) is not None:
-                # 计算VCT，确认是否能三三杀,深度并不需要太深
-                print("VCT成功!")
-                return [p], []
-            print("VCT失败!")
+        if len(p_43) > 0:
+            print("我方存在四三点!")
+            return list(p_43), list(def_p)
+
+        if len(p_33) > 0 and len(enemy["live3"]) == 0:
+            print("我方存在三三点!")
+            for loc in enemy["live2"]:
+                def_p = def_p | set(loc.renju.get_build_points(loc.point, loc.i))
+            return list(p_33), list(def_p)
 
     if len(enemy["live3"]) > 0:  # 敌方有活三,我方无四和活三，需要考虑VCF和阻挡活三
         atk_p, def_p = set(), set()  # 冲四点
@@ -130,6 +127,34 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
         for loc in enemy["live3"]:  # 敌方活三的防点
             def_p = def_p | set(loc.renju.get_block_points(loc.point, loc.i))
         return list(atk_p), list(def_p)
+
+    elif len(enemy["sleep3"]) > 0 and len(enemy["live2"]) > 0:
+        p_c4, p_l3, bp_43, bp_33 = set(), set(), set(), set()
+        for loc in enemy["sleep3"]:
+            p_ = set(loc.renju.get_build_points(loc.point, loc.i))
+            if len(p_44 := p_ & p_c4) > 0:  # 存在四四点，必胜了
+                return [], list(p_44)[:1]
+            p_c4 = p_c4 | p_  # 合并冲四点
+
+        for loc in enemy["live2"]:
+            p_ = set(loc.renju.get_build_points(loc.point, loc.i))
+            if len(p_c4 & p_) > 0:  # 敌方四三点
+                bp_43 = bp_43 | set(loc.renju.get_block_points(loc.point, loc.i))
+            if len(p_l3 & p_) > 0:  # 敌方三三点
+                bp_33 = bp_33 | set(loc.renju.get_block_points(loc.point, loc.i))
+            p_l3 = p_l3 | p_
+
+        atk_p = set()
+        for loc in self["sleep3"]:
+            atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
+
+        if len(bp_43) > 0:
+            return list(atk_p), list(bp_43)
+
+        if len(bp_33) > 0:
+            for loc in self["live2"]:
+                atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
+            return list(atk_p), list(bp_33)
 
     if only_four ^ only_three:
         # 没有必定要防的点,且在计算vct或vcf
