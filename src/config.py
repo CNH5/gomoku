@@ -55,9 +55,9 @@ ai_enabled: bool
 show_piece_id: bool
 draw_border: bool
 show_forbidden_point: bool
-debug = True  # ...  -_-
+debug = False  # ...  -_-
 
-time_out = 2000  # AI思考超时时间
+time_out = 100  # AI思考超时时间
 
 
 def __init__():
