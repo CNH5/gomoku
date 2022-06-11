@@ -4,7 +4,7 @@ import time
 from multiprocessing import Process, Pipe
 from src import config as CONFIG
 
-from src.ai.util import iter_depth, vcf, vct
+from src.ai.compute import iter_depth, vcf, vct
 from src.gomoku import direction, game
 from src.gomoku.game import Point
 

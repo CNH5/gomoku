@@ -6,7 +6,7 @@ from functools import lru_cache
 from src.ai import ai_chessman
 from src.ai.cache import Cache
 from src.ai.zobrist import zobrist
-from src.gomoku import game
+from src.gomoku import game, Point
 from src.gomoku.checkerboard import Checkerboard
 from src.gomoku.renju import forbidden_point_score, renju_5_score
 
@@ -87,7 +87,39 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
         atk_p = loc.renju.get_build_points(loc.point, loc.i)
         return [atk_p[random.randint(0, len(atk_p) - 1)]], []  # 随机选一个就可以了
 
-    elif len(enemy["live3"]) > 0:  # 敌方有活三,我方无四和活三，需要考虑VCF和阻挡活三
+    elif len(self["sleep3"]) > 0 and len(self["live2"]) > 0 and not (only_four ^ only_three):
+        # 不是在计算VCT或VCF
+        p_c4, p_l3, p_43, p_33 = set(), set(), set(), set()
+        for loc in self["sleep3"]:
+            p_ = set(loc.renju.get_build_points(loc.point, loc.i))
+            if len(p_44 := p_ & p_c4) > 0:  # 存在四四点，必胜了
+                print("存在四四点!")
+                return [p_44[random.randint(0, len(p_44) - 1)]], []
+            p_c4 = p_c4 | p_  # 合并冲四点
+
+        for loc in self["live2"]:
+            p_ = set(loc.renju.get_build_points(loc.point, loc.i))
+            p_43 = p_43 | (p_c4 & p_)  # 四三点
+            p_33 = p_33 | (p_l3 & p_)  # 三三点
+            p_l3 = p_l3 | p_
+
+        if len(p_43) > 0:
+            print("存在四三点!")
+            if (p := vcf(checkerboard, self_is_black, max_depth=6)) is not None:
+                # 计算VCF，确认是否能四三杀,深度并不需要太深
+                print("VCF成功!")
+                return [p], []
+            print("VCF失败!")
+
+        if len(p_33) > 0:
+            print("存在三三点!")
+            if (p := vct(checkerboard, self_is_black, max_depth=6)) is not None:
+                # 计算VCT，确认是否能三三杀,深度并不需要太深
+                print("VCT成功!")
+                return [p], []
+            print("VCT失败!")
+
+    if len(enemy["live3"]) > 0:  # 敌方有活三,我方无四和活三，需要考虑VCF和阻挡活三
         atk_p, def_p = set(), set()  # 冲四点
         for loc in self["sleep3"]:
             atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
@@ -107,13 +139,14 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
         atk_p = set()
         for loc in self["sleep3"]:
             atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
-        if only_four:
+        if only_four:  # VCF只需要考虑冲四
             return list(atk_p), []
 
-        if only_three:
+        if only_three:  # VCT的时候需要考虑活二
             for loc in self["live2"]:
                 atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
             return list(atk_p), []
+
     return gen(checkerboard, self_is_black)
 
 
@@ -172,7 +205,7 @@ def negamax(checkerboard, max_depth, self_is_black: bool, alpha=-99999999, beta=
         # 在考虑的时候敌方已经有冲四，不必继续往下
         return Node(0, depth, def_p[0])
 
-    if depth == max_depth or len(atk_p) + len(def_p) == 0 or not ai_chessman.thinking:
+    if depth == max_depth or len(atk_p) + len(def_p) == 0:
         # 达到最大计算深度或者不必继续往下
         return Node(evaluation(checkerboard), depth, None)
 
@@ -201,14 +234,14 @@ def negamax(checkerboard, max_depth, self_is_black: bool, alpha=-99999999, beta=
             point, d1 = p, d
 
         print(f"depth={depth}, score={score}, {p}")
-        if alpha == renju_5_score:
-            # 出现必胜分支，没必要计算其它分支了
+        if alpha == renju_5_score or not ai_chessman.thinking:
+            # 出现必胜分支或超时，没必要计算其它分支了
             break
     cache.save(zobrist.code, Node(alpha, max_depth, point))
     return Node(alpha, d1, point)
 
 
-def iter_depth(checkerboard: Checkerboard, self_is_black: bool, start=2,
+def iter_depth(checkerboard: Checkerboard, self_is_black: bool, start=4,
                max_depth=DEPTH, cache: Cache = None, only_three=False, only_four=False):
     """
     迭代加深
@@ -245,7 +278,7 @@ def vct(checkerboard, self_is_black: bool, max_depth=20, cache=None):
         # 没有活二，或当前没有先手，不可能VCT
         return None
     # VCT的最大深度不好确定，两个活二就能到12层...
-    return iter_depth(checkerboard, self_is_black, 4, max_depth, cache, only_three=True)
+    return iter_depth(checkerboard, self_is_black, max_depth=max_depth, cache=cache, only_three=True)
 
 
 def vcf(checkerboard, self_is_black: bool, max_depth=12, cache=None):
@@ -262,4 +295,4 @@ def vcf(checkerboard, self_is_black: bool, max_depth=12, cache=None):
         return None
     # VCF的最小深度是4，深度一般不会超过眠三的数量太多
     max_depth = min((n if n % 2 == 0 else n + 1) + 6, max_depth)
-    return iter_depth(checkerboard, self_is_black, 4, max_depth, cache, only_four=True)
+    return iter_depth(checkerboard, self_is_black, max_depth=max_depth, cache=cache, only_four=True)

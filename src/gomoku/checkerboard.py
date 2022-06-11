@@ -66,6 +66,8 @@ class Checkerboard:
                     # 移除棋子,并且棋子所在的地方原来就是禁手点
                     self.forbidden_point = self.forbidden_point | {change_point}
             else:
+                # 放置在禁手点上，禁手点取消
+                self.forbidden_point = self.forbidden_point - {change_point}
                 self.checkerboard.place(change_point, new_piece, simulation=True)
 
             # self.forbidden_point = set(
@@ -323,7 +325,7 @@ class Checkerboard:
                         s = j + 1
                 else:
                     e = j
-            s, e = max(0, s - 4), e + 4
+            s, e = max(0, s - 3), e + 5
             shape += BLOCK_MARK
             shapes["right"].append(LineShape(get_point(Point(i, 0), RIGHT, s), shape[s: e]))
         # 纵向阳线
@@ -340,7 +342,7 @@ class Checkerboard:
                         s = i + 1
                 else:
                     e = i
-            s, e = max(0, s - 4), e + 4
+            s, e = max(0, s - 3), e + 5
             shape += BLOCK_MARK
             shapes["lower"].append(LineShape(get_point(Point(0, j), LOWER, s), shape[s: e]))
         # 按照纵轴获取形状
@@ -440,4 +442,4 @@ class Checkerboard:
 
     def __hash__(self):
         # 直接把整个棋盘的值弄成字符串...
-        return hash("".join(str(i) for i in self._board.flatten()))
+        return hash(zobrist.code)
