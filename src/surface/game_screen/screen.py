@@ -194,7 +194,7 @@ class GameScreen(MyScreen):
             for point in self._other_points:
                 self.__draw_frame(mark, point)
 
-        if CONFIG.show_forbidden_point and (game.winner is None) and game.is_black_now():
+        if CONFIG.show_forbidden_point and game.forbidden_moves and (game.winner is None) and game.is_black_now():
             mark = pygame.transform.smoothscale(x_img, (gs_conf.x_size, gs_conf.x_size))
             for p in game.checkerboard.forbidden_points():
                 self.__draw_frame(mark, p)

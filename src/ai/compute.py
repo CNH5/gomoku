@@ -6,7 +6,7 @@ from functools import lru_cache
 from src.ai import ai_chessman
 from src.ai.cache import Cache
 from src.ai.zobrist import zobrist
-from src.gomoku import game, Point
+from src.gomoku import game, Point  # 不导入这个Point不方便debug
 from src.gomoku.checkerboard import Checkerboard
 from src.gomoku.renju import forbidden_point_score, renju_5_score
 
@@ -106,8 +106,9 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
             # 用VCF去判断能否四三杀
             return [p], []
 
-        if len(p_33) > 0 and (p := vct(checkerboard, self_is_black)) is not None:
-            # 用VCT去判断能否三三杀
+        if len(p_33) > 0 and vcf(checkerboard, not self_is_black) is None \
+                and (p := vct(checkerboard, self_is_black)) is not None:
+            # 用VCT去判断能否三三杀,在这之前需要判断敌方能否VCF
             return [p], []
 
     if len(enemy["live3"]) > 0:  # 敌方有活三,我方无四和活三，需要考虑VCF和阻挡活三
