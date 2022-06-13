@@ -76,7 +76,8 @@ class ConfigScreen(MyScreen):
                 cs_conf.x_input_box, cs_conf.y_repentance_times,
                 cs_conf.input_box_width, cs_conf.input_box_height
             ),
-            min_=1, max_=10,
+            min_=CONFIG.MIN_REPENTANCE_TIMES,
+            max_=CONFIG.MAX_REPENTANCE_TIMES,
             default_num=cs_conf.repentance_times,
             text_size=cs_conf.input_text_size,
             color_active=CONFIG.TITLE_TEXT_COLOR,

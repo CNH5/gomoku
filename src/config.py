@@ -21,10 +21,13 @@ BOX_MINUS_RESOURCE = "../res/image/square_minus.png"
 BOX_MINUS_DISABLE_RESOURCE = "../res/image/square_minus_disable.png"
 X_RESOURCE = "../res/image/x.png"
 FONT_MSYH = "../res/fonts/msyh.ttc"
+
 MIN_ROW_POINTS = 5  # 最小行数
 MIN_COL_POINTS = 5  # 最小列数
+MIN_REPENTANCE_TIMES = 1  # 最小悔棋次数
 MAX_ROW_POINTS = 30  # 最大行数
 MAX_COL_POINTS = 30  # 最大列数
+MAX_REPENTANCE_TIMES = 10  # 最大悔棋次数
 FPS = 30  # 帧率
 
 # CHECKERBOARD_COLOR = (0xE3, 0x92, 0x65)  # 棋盘颜色
