@@ -1,1 +1,15 @@
-{"start": false, "winner": null, "forbidden_win": false, "win_points": [], "row": 15, "col": 15, "forbidden_moves": true, "infinity_repentance": true, "black_repentance_times": 1, "black_records": [], "white_repentance_times": 1, "white_records": [], "forbidden_points": []}
+{
+  "start": false,
+  "winner": null,
+  "forbidden_win": false,
+  "win_points": [],
+  "row": 15,
+  "col": 15,
+  "forbidden_moves": true,
+  "infinity_repentance": true,
+  "black_repentance_times": 1,
+  "black_records": [],
+  "white_repentance_times": 1,
+  "white_records": [],
+  "forbidden_points": []
+}

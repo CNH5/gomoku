@@ -87,7 +87,7 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
         atk_p = loc.renju.get_build_points(loc.point, loc.i)
         return [atk_p[random.randint(0, len(atk_p) - 1)]], []  # 随机选一个就可以了
 
-    elif len(self["sleep3"]) > 0 and len(self["live2"]) > 0:
+    elif len(self["sleep3"]) > 0 and len(self["live2"]) > 0 and not (only_three ^ only_four):
         # 找四三点
         p_c4, p_l3, p_43, p_33 = set(), set(), set(), set()
         for loc in self["sleep3"]:
