@@ -138,7 +138,7 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
     #         if len(p_l3 & p_) > 0:  # 敌方三三点
     #             bp_33 = bp_33 | set(loc.renju.get_block_points(loc.point, loc.i))
     #         p_l3 = p_l3 | p_
-    #
+
     #     atk_p = set()
     #     for loc in self["sleep3"]:
     #         atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))

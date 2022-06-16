@@ -239,7 +239,7 @@ def get_f_renju(old_cb, new_cb, point: Point):
     return add, loss
 
 
-@lru_cache(maxsize=2048)  # 只有在悔棋的时候会比较快,那其实也还好?
+# @lru_cache(maxsize=2048)  # 只有在悔棋的时候会比较快,那其实也还好?
 def check_forbidden(checkerboard, point: Point, get_reason=False, place_piece=True, backup=True):
     """
     判断这个点是不是禁手点

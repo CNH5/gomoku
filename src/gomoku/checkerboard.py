@@ -234,8 +234,8 @@ class Checkerboard:
         if self.can_place(point):
             if not simulation:
                 self._attribute.update(point, piece)
+                zobrist.go(point, not game.is_black_now(self))
             self._piece_num += 1
-            zobrist.go(point, not game.is_black_now(self))
             self._board[point.X][point.Y] = piece
         else:
             raise ValueError("棋子放置失败-_-!")
@@ -247,9 +247,9 @@ class Checkerboard:
         if not self.can_place(point):
             if not simulation:
                 self._attribute.update(point, self._none_piece)
+                zobrist.go(point, game.is_black_now(self))  # 没必要在不必须的地方更新这个
             self._piece_num -= 1
             self._board[point.X, point.Y] = self._none_piece
-            zobrist.go(point, game.is_black_now(self))  # 没必要在不必须的地方更新这个
 
     def get_piece(self, **args) -> int:
         """
