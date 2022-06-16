@@ -4,7 +4,7 @@ from copy import deepcopy
 import numpy as np
 
 from src.ai.zobrist import zobrist
-from src.gomoku import direction, Point, NONE_MARK, BLOCK_MARK, X_MARK, get_point, \
+from src.gomoku import Point, NONE_MARK, BLOCK_MARK, X_MARK, get_point, \
     LOWER_RIGHT, RIGHT, LOWER, game, UPPER_RIGHT
 from src.gomoku.renju.util import check_forbidden, get_f_renju, get_renju, get_all_renju
 from src.gomoku.chessman import BLACK_CHESSMAN, WHITE_CHESSMAN
@@ -93,26 +93,27 @@ class Checkerboard:
             """
             if back_up:
                 new_cb = deepcopy(new_cb)
-            shape = new_cb.shape()
             update_points = [point]
-            for dx, dy in direction:
+            for i in range(8):  # 8个方向
                 k = 0
-                for i in range(1, max(shape[0], shape[1])):
-                    p = Point(point.X + i * dx, point.Y + i * dy)
+                for d in range(1, max(new_cb.shape())):
+                    p = get_point(point, i, d)
                     if not new_cb.in_area(point=p) or k >= 2:
                         break
-                    if new_cb.get_piece(point=p) == new_cb.none_piece():
-                        if check_forbidden(new_cb, p, backup=False)[0]:
-                            s = self.forbidden_point | {p}
-                            if len(s) > len(self.forbidden_point):  # 新增禁手点
-                                self.forbidden_point = s
-                                update_points += self.__update_forbidden_point(new_cb, p, False)
-                        else:
-                            s = self.forbidden_point - {p}
-                            if len(s) < len(self.forbidden_point):  # 禁手点减少
-                                self.forbidden_point = s
-                                update_points += self.__update_forbidden_point(new_cb, p, False)
+                    if new_cb.get_piece(point=p) == new_cb.none_piece():  # 只考虑周围的空点
+                        forbidden = check_forbidden(new_cb, p, backup=False)[0]  # 这个点是不是禁手点
+                        contain = self.forbidden_point.__contains__(p)  # 这个点是否在原来的禁手点中
+
+                        if forbidden and not contain:  # 新增禁手点
+                            self.forbidden_point = self.forbidden_point | {p}
+                            update_points += self.__update_forbidden_point(new_cb, p, False)
+
+                        elif not forbidden and contain:  # 禁手点被解除
+                            self.forbidden_point = self.forbidden_point - {p}
+                            update_points += self.__update_forbidden_point(new_cb, p, False)
                         k += 1
+                    else:
+                        k = 0
             return update_points
 
         def __update_renju(self, old_cb, new_cb, point):
@@ -137,6 +138,9 @@ class Checkerboard:
             self.renju_white = white
 
         def reset(self):
+            """
+            重置连珠
+            """
             self.forbidden_point = set()
             self.renju_black = {
                 "sleep2": [],
@@ -154,15 +158,27 @@ class Checkerboard:
             }
 
     def forbidden_points(self) -> set[Point]:
+        """
+        获取棋盘上的禁手点
+        """
         return self._attribute.forbidden_point
 
     def renju_black(self) -> dict[str, list]:
+        """
+        获取黑方的连珠
+        """
         return self._attribute.renju_black
 
     def renju_white(self) -> dict[str, list]:
+        """
+        获取白方的连珠
+        """
         return self._attribute.renju_white
 
     def recalibration(self):
+        """
+        重新校准连珠
+        """
         self._attribute.recalibration()
 
     @staticmethod
@@ -170,6 +186,9 @@ class Checkerboard:
         return 0
 
     def shape(self):
+        """
+        获取棋盘的大小
+        """
         return self._board.shape
 
     def reset(self, row, col):
@@ -196,6 +215,9 @@ class Checkerboard:
             return False
 
     def piece_count(self):
+        """
+        获取棋盘上棋子的数量
+        """
         return self._piece_num
 
     def can_place(self, point: Point):
@@ -212,8 +234,8 @@ class Checkerboard:
         if self.can_place(point):
             if not simulation:
                 self._attribute.update(point, piece)
-                zobrist.go(point, not game.is_black_now(self))
             self._piece_num += 1
+            zobrist.go(point, not game.is_black_now(self))
             self._board[point.X][point.Y] = piece
         else:
             raise ValueError("棋子放置失败-_-!")
@@ -225,9 +247,9 @@ class Checkerboard:
         if not self.can_place(point):
             if not simulation:
                 self._attribute.update(point, self._none_piece)
-                zobrist.go(point, game.is_black_now(self))  # 没必要在不必须的地方更新这个
             self._piece_num -= 1
             self._board[point.X, point.Y] = self._none_piece
+            zobrist.go(point, game.is_black_now(self))  # 没必要在不必须的地方更新这个
 
     def get_piece(self, **args) -> int:
         """
@@ -269,13 +291,13 @@ class Checkerboard:
         :param consider_forbidden 是否考虑禁手
         """
         shapes = []
-        for dx, dy in direction:
+        for i in range(8):
             shape = ""
             n = 0  # 统计连续出现的空位的数量
-            for k in range(1, max(self._board.shape[0], self._board.shape[1])):
+            for k in range(1, max(self._board.shape)):
                 if n >= 4:  # 连续出现4个空位，没有必要继续往下了
                     break
-                p = Point(point.X + dx * k, point.Y + dy * k)
+                p = get_point(point, i, k)
                 if self.in_area(point=p):
                     piece = self.get_piece(point=p)
                     if piece == self._none_piece:
