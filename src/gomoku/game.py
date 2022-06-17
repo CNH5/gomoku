@@ -258,3 +258,6 @@ def is_draw() -> bool:
     """
     is_full = row * col <= checkerboard.piece_count()
     return is_full
+
+
+load_data()  # 初始化

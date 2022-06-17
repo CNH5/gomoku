@@ -7,6 +7,7 @@ from src.surface.screen import MyScreen
 from src.surface.button import MyButton
 from src.surface.input import MyIntInputBox
 from src.surface.config_screen import config as cs_conf
+import src.surface.game_screen.screen as gs
 
 
 class ConfigScreen(MyScreen):
@@ -37,10 +38,9 @@ class ConfigScreen(MyScreen):
     _row_points_input_box: MyIntInputBox  # 行数量input_box
     _col_points_input_box: MyIntInputBox  # 列数量input_box
 
-    def __init__(self, screen: pygame.Surface, last_screen: MyScreen):
+    def __init__(self, screen: pygame.Surface):
         super().__init__(screen, "五子棋 - 设置")
         cs_conf.__init__()
-        self._last_screen = last_screen
         self.__re_init_buttons()
         self.__re_init_input()
 
@@ -389,7 +389,6 @@ class ConfigScreen(MyScreen):
             elif self.show_coordinate_cb.in_area(x, y):
                 # 点击显示坐标checkbox
                 cs_conf.show_subscript = not cs_conf.show_subscript
-                self._last_screen.change_size()
 
             elif self._show_border_cb.in_area(x, y):
                 # 点击显示棋盘边框checkbox
@@ -405,7 +404,7 @@ class ConfigScreen(MyScreen):
             elif self._back_bt.in_area(x, y):
                 # 点击返回按钮
                 cs_conf.save()
-                return self._last_screen
+                return gs.GameScreen(self.screen)
 
             elif self._row_points_plus_bt.in_area(x, y):
                 # 点击行数+1按钮
@@ -478,10 +477,8 @@ class ConfigScreen(MyScreen):
         cs_conf.change_size(width, height)
         self.__re_init_buttons()
         self.__re_init_input()
-        self._last_screen.change_size()
         return self
 
     def exit(self) -> None:
-        self._last_screen.exit()
         cs_conf.save()
         super().exit()

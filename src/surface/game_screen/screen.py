@@ -10,7 +10,7 @@ from src.main import hover_img, cross_img, x_img, box_checked_img, box_unchecked
 from src.surface.screen import MyScreen
 
 from src.surface.game_screen import config as gs_conf
-from src.surface.config_screen.screen import ConfigScreen
+import src.surface.config_screen.screen as cs
 
 # 天元和星的位置
 stars = ((3, 3), (3, 11), (7, 7), (11, 3), (11, 11))
@@ -43,13 +43,12 @@ class GameScreen(MyScreen):
     _enable_forbidden_cb: MyButton  # 启用禁手checkbox
     _enable_ai_cb: MyButton  # 启用AI checkbox
     _ai_first_cb: MyButton  # AI先手checkbox
-    _ai_think_bt: MyButton
+    _ai_think_bt: MyButton  # AI计算按钮,测试用的
     _hover_point: Point = None  # 鼠标所在的棋盘坐标
 
     def __init__(self, screen):
         super().__init__(screen, "五子棋")
         self.mark = cross_img  # 需要绘制的标志
-        game.load_data()
 
         gs_conf.init_location(game.row, game.col)
         self.__re_init_buttons()
@@ -276,8 +275,7 @@ class GameScreen(MyScreen):
         """
         放置棋子
         """
-        chessman = mouse_chessman()
-        game.place(point, chessman)
+        game.place(point, mouse_chessman())
         if game.forbidden_win:  # 因为禁手获胜，改变标记为x
             self.mark = x_img
         self.set_other_point(point)
@@ -301,7 +299,7 @@ class GameScreen(MyScreen):
                 self.set_other_point(game.repentance(game.now_chessman()))
             elif self._config_bt.in_area(x, y):
                 # 设置按钮
-                return ConfigScreen(self.screen, self)
+                return cs.ConfigScreen(self.screen)
             elif self._enable_forbidden_cb.in_area(x, y):
                 # 是否启用禁手checkbox
                 game.forbidden_moves = CONFIG.forbidden_moves = not CONFIG.forbidden_moves
