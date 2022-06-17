@@ -29,7 +29,7 @@ def gen(checkerboard: Checkerboard, self_is_black: bool):
     """
     启发式搜索...
     """
-    consider_points = set(checkerboard.get_edge_points())  # 棋盘上的边界点
+    consider_points = checkerboard.edge_points()  # 棋盘上的边界点
     if checkerboard.forbidden_moves and self_is_black:
         # 黑方需要不考虑禁手点
         consider_points = consider_points - set(checkerboard.forbidden_points())

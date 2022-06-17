@@ -37,16 +37,17 @@ class Checkerboard:
             if forbidden_points is None:
                 self.forbidden_point = set()
             else:
-                self.forbidden_point = forbidden_points
-            self.checkerboard = checkerboard
-            self.renju_black = {
+                self.forbidden_point = forbidden_points  # 禁手点
+            self.checkerboard = checkerboard  # 绑定的棋盘
+            self.edge_points = set()  # 边界点
+            self.renju_black = {  # 黑方连珠
                 "sleep2": [],
                 "live2": [],
                 "sleep3": [],
                 "live3": [],
                 "renju4": [],
             }
-            self.renju_white = {
+            self.renju_white = {  # 白方连珠
                 "sleep2": [],
                 "live2": [],
                 "sleep3": [],
@@ -59,7 +60,8 @@ class Checkerboard:
             更新禁手点和连珠,在更新棋子前调用
             """
             old_cb = deepcopy(self.checkerboard)
-            old_piece = self.checkerboard.get_piece(point=change_point)
+            old_piece = self.checkerboard.get_piece(point=change_point)  # 原来的棋子
+
             if new_piece == self.checkerboard.none_piece():  # 模拟
                 self.checkerboard.remove_piece(change_point, simulation=True)
                 if check_forbidden(self.checkerboard, change_point, backup=False)[0]:
@@ -69,16 +71,16 @@ class Checkerboard:
                 # 放置在禁手点上，禁手点取消
                 self.forbidden_point = self.forbidden_point - {change_point}
                 self.checkerboard.place(change_point, new_piece, simulation=True)
-
+            # 貌似没有必要考虑极端情况
             # self.forbidden_point = set(
             #     p for p in self.forbidden_point if check_forbidden(self.checkerboard, p, backup=False)[0]
             # )
-            # 有必要考虑极端情况吗?放在一条线上就能直接更新了
-
+            # 更新边界点
+            self.__update_edge_points(change_point, new_piece)
             # 放置或移除棋子之后修改的点
             updated_points = self.__update_forbidden_point(self.checkerboard, change_point)  # 关联点及禁手点
 
-            for cp in updated_points:
+            for cp in updated_points:  # 根据关联更新的点更新周围连珠
                 self.__update_renju(old_cb, self.checkerboard, cp)
 
             if new_piece == self.checkerboard.none_piece():  # 还原
@@ -129,19 +131,55 @@ class Checkerboard:
                 self.renju_white[key] = list((set(self.renju_white[key]) - white_loss[key]) | white_add[key])
                 self.renju_black[key] = list((set(self.renju_black[key]) - black_loss[key]) | black_add[key])
 
+        def __update_edge_points(self, change_point: Point, new_piece: int):
+            """
+            更新边界点
+            """
+            # 棋盘的形状
+            shape = self.checkerboard.shape()
+            # 新棋子是否为空棋子,若为空则代表移除棋子，否则代表放置棋子
+            if not (piece_is_none := new_piece == Checkerboard.none_piece()):
+                # 放置棋子，移除放置的点
+                self.edge_points = self.edge_points - {change_point}
+
+            for dx in range(-2, 3):  # 5x5
+                if 0 <= (x := change_point.X + dx) < shape[0]:  # 偏移的x值在棋盘上
+                    for dy in range(-2, 3):
+                        if 0 <= (y := change_point.Y + dy) < shape[1]:  # 偏移的y值在棋盘上
+                            if self.checkerboard.get_piece(x=x, y=y) == Checkerboard.none_piece():  # 偏移位置不为空
+                                if not piece_is_none:
+                                    # 放置棋子，边界点只可能增加
+                                    self.edge_points = self.edge_points | {Point(x, y)}
+                                elif not self.checkerboard.has_neighbor(x=x, y=y):
+                                    # 移除棋子，边界点只可能减少
+                                    self.edge_points = self.edge_points - {Point(x, y)}
+
+        def __reset_edge_points(self):
+            """
+            重新校准边界点
+            """
+            self.edge_points = set()
+            shape = self.checkerboard.shape()  # 重置边界点
+            for i in range(shape[0]):
+                for j in range(shape[1]):
+                    if self.checkerboard.get_piece(x=i, y=j) != Checkerboard.none_piece():
+                        continue
+                    if self.checkerboard.has_neighbor(x=i, y=j):
+                        self.edge_points = self.edge_points | {Point(i, j)}
+
         def recalibration(self):
             """
-            重新获取连珠
+            重新校准属性
             """
-            black, white = get_all_renju(self.checkerboard)
-            self.renju_black = black
-            self.renju_white = white
+            self.renju_black, self.renju_white = get_all_renju(self.checkerboard)
+            self.__reset_edge_points()
 
         def reset(self):
             """
-            重置连珠
+            重置属性
             """
             self.forbidden_point = set()
+            self.edge_points = set()
             self.renju_black = {
                 "sleep2": [],
                 "live2": [],
@@ -174,6 +212,12 @@ class Checkerboard:
         获取白方的连珠
         """
         return self._attribute.renju_white
+
+    def edge_points(self) -> [Point]:
+        """
+        获取边界点
+        """
+        return self._attribute.edge_points
 
     def recalibration(self):
         """
@@ -225,7 +269,7 @@ class Checkerboard:
         判断这个位置是否能落子
         :return: 能落子返回True，不能落子返回False
         """
-        return self.in_area(point=point) and self._board[point.X][point.Y] == self._none_piece
+        return self.in_area(point=point) and self.get_piece(point=point) == self._none_piece
 
     def place(self, point: Point, piece: int, simulation=False):
         """
@@ -262,26 +306,6 @@ class Checkerboard:
             return self._board[args["x"], args["y"]]
         else:
             return self.none_piece()
-
-    def get_edge_points(self) -> [Point]:
-        """
-        获取边界点
-        """
-        points = []
-        for i in range(self._board.shape[0]):
-            for j in range(self._board.shape[1]):
-                p = Point(i, j)
-                if self.get_piece(point=p) != self._none_piece:
-                    continue
-                for dx in range(-2, 3):  # 5x5
-                    x = i + dx
-                    if 0 <= x < self._board.shape[0]:
-                        for dy in range(-2, 3):
-                            y = j + dy
-                            if 0 <= y < self._board.shape[1] and self.get_piece(x=x, y=y) != self._none_piece:
-                                points.append(p)
-                                break
-        return points
 
     def point_shape(self, point: Point, x_piece: int, consider_forbidden=False):
         """
@@ -338,7 +362,7 @@ class Checkerboard:
             shape = BLOCK_MARK
             s, e = 0, 0  # 这个方向上第一个棋子和最后一个棋子的下标
             for j in range(self._board.shape[1]):
-                if self._attribute.forbidden_point.__contains__(Point(i, j)) and consider_forbidden:
+                if consider_forbidden and self._attribute.forbidden_point.__contains__(Point(i, j)):
                     shape += BLOCK_MARK
                 else:
                     shape += self.get_mark(piece, x=i, y=j)
@@ -355,7 +379,7 @@ class Checkerboard:
             shape = BLOCK_MARK
             s, e = 0, 0  # 这个方向上第一个棋子和最后一个棋子的下标
             for i in range(self._board.shape[1]):
-                if self._attribute.forbidden_point.__contains__(Point(i, j)) and consider_forbidden:
+                if consider_forbidden and self._attribute.forbidden_point.__contains__(Point(i, j)):
                     shape += BLOCK_MARK
                 else:
                     shape += self.get_mark(piece, x=i, y=j)
@@ -376,7 +400,7 @@ class Checkerboard:
             for d in range(min(self._board.shape[0] - i, self._board.shape[1] - 1)):
                 p1, p2 = get_point(p1_0, LOWER_RIGHT, d), get_point(p2_0, UPPER_RIGHT, d)
 
-                if self._attribute.forbidden_point.__contains__(p1) and consider_forbidden:
+                if consider_forbidden and self._attribute.forbidden_point.__contains__(p1):
                     shape1 += BLOCK_MARK
                 else:
                     shape1 += self.get_mark(piece, point=p1)
@@ -386,7 +410,7 @@ class Checkerboard:
                 else:
                     e1 = d + 1
 
-                if self._attribute.forbidden_point.__contains__(p2) and consider_forbidden:
+                if consider_forbidden and self._attribute.forbidden_point.__contains__(p2):
                     shape2 += BLOCK_MARK
                 else:
                     shape2 += self.get_mark(piece, point=p2)
@@ -409,7 +433,7 @@ class Checkerboard:
             for d in range(min(self._board.shape[1] - j, self._board.shape[0] - 1)):
                 p1, p2 = get_point(p1_0, LOWER_RIGHT, d), get_point(p2_0, UPPER_RIGHT, d)
 
-                if self._attribute.forbidden_point.__contains__(p1) and consider_forbidden:
+                if consider_forbidden and self._attribute.forbidden_point.__contains__(p1):
                     shape1 += BLOCK_MARK
                 else:
                     shape1 += self.get_mark(piece, point=p1)
@@ -419,7 +443,7 @@ class Checkerboard:
                 else:
                     e1 = d + 1
 
-                if self._attribute.forbidden_point.__contains__(p2) and consider_forbidden:
+                if consider_forbidden and self._attribute.forbidden_point.__contains__(p2):
                     shape2 += BLOCK_MARK
                 else:
                     shape2 += self.get_mark(piece, point=p2)
@@ -453,15 +477,28 @@ class Checkerboard:
         else:
             return BLOCK_MARK
 
+    def has_neighbor(self, **args):
+        """
+        判断点周围是否有棋子
+        """
+        if len(args) == 1:
+            x, y = args["point"].X, args["point"].Y
+        elif len(args) == 2:
+            x, y = args["x"], args["y"]
+        else:
+            return False
+
+        for dx in range(-2, 3):  # 点周围5x5的区域
+            if 0 <= (x1 := x + dx) < self._board.shape[0]:  # 偏移的x值是否在棋盘上
+                for dy in range(-2, 3):
+                    if 0 <= (y1 := y + dy) < self._board.shape[1]:
+                        if self.get_piece(x=x1, y=y1) != Checkerboard.none_piece():
+                            return True
+        return False
+
     def have_piece(self, point):
         return self.get_piece(point=point) != self.none_piece()
 
-    def __str__(self):
-        return f"checkerboard:\n{self._board}"
-
-    def __repr__(self):
-        return self.__str__()
-
     def __hash__(self):
-        # 直接把整个棋盘的值弄成字符串...
+        # zobrist和棋形相对应，可以用这个代替哈希值
         return hash(zobrist.code)
