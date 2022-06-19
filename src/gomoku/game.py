@@ -230,15 +230,18 @@ def check_win(last_point: Point = None):
         for point, i in renju_5:
             win_points += [get_point(point, i, k) for k in range(1, 6)]
 
-    elif len(rot) > 0:
+    if len(rot) > 0:
         # 长连
-        if piece_is_black and forbidden_moves:
-            # 长连禁手，白方获胜
+        if not (piece_is_black and forbidden_moves and len(renju_5) > 0):
+            for point, i, length in rot:
+                win_points += [get_point(point, i, k) for k in range(1, length - 1)]
+
+        if piece_is_black and forbidden_moves and len(renju_5) == 0:
+            # 长连禁手，无五连，白方获胜
+            forbidden_win = True
             winner = WHITE_CHESSMAN
         else:
             winner = BLACK_CHESSMAN if piece_is_black else WHITE_CHESSMAN
-        for point, i, length in rot:
-            win_points += [get_point(point, i, k) for k in range(1, length - 1)]
 
     elif piece_is_black and forbidden_moves:
         # 没有五连和长连，判断是不是禁手点

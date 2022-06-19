@@ -86,7 +86,9 @@ def start_thinking(after_get):
     print(f"time: {time.time() - t1}, best point: {point}")
     if point is not None:
         game.place(point, game.now_chessman())  # 无所谓了，反正鼠标不能放置棋子，棋盘不会变动，现在的棋手也不会有变动
-    after_get(point)
+
+    if after_get is not None:
+        after_get(point)
 
 
 def start_point() -> Point:
@@ -165,7 +167,8 @@ def get_point(call_back):
         if game.checkerboard.piece_count() < 3:
             p = start_point()
             game.place(p, corresponding_chessman())
-            call_back(p)
+            if call_back is not None:
+                call_back(p)
         else:
             wait_thread = threading.Thread(target=start_thinking, args=(call_back,))
             wait_thread.start()

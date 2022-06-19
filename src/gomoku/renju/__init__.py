@@ -32,27 +32,27 @@ class Renju:
         """
         return self._score
 
-    def get_shape_points(self, point, i: int):
+    def get_shape_points(self, start, i: int):
         """
         获取连珠的形状所在的坐标
-        :param point: 起始点
+        :param start: 起始点
         :param i: 方向
         """
-        return [get_point(point, i, d) for d in self._points_index]
+        return [get_point(start, i, d) for d in self._points_index]
 
-    def get_build_points(self, point, i: int):
+    def get_build_points(self, start, i: int):
         """
         获取连珠成型点所在的坐标
-        :param point: 起始点
+        :param start: 起始点
         :param i: 方向
         """
-        return [get_point(point, i, d) for d in self._build_index]
+        return [get_point(start, i, d) for d in self._build_index]
 
-    def get_block_points(self, point, i):
+    def get_block_points(self, start, i):
         """
         获取阻挡点的坐标
         """
-        return [get_point(point, i, d) for d in self._block_index]
+        return [get_point(start, i, d) for d in self._block_index]
 
     def __str__(self):
         return f"pattern: {self._reg.pattern}, build_index: {self._build_index}, score: {self._score}"
