@@ -6,6 +6,7 @@ import pygame
 import src.surface.game_screen.screen as gs
 
 from src import config as CONFIG
+from src.ai import ai_chessman
 from src.surface.screen import MyScreen
 
 pygame.init()
@@ -29,16 +30,25 @@ box_minus_img = pygame.image.load(CONFIG.BOX_MINUS_RESOURCE)
 box_minus_disable_img = pygame.image.load(CONFIG.BOX_MINUS_DISABLE_RESOURCE)
 
 
+def screen_exit(main_screen: MyScreen):
+    """
+    全局退出事件
+    """
+    pygame.quit()
+    CONFIG.save()
+    main_screen.exit()
+    ai_chessman.stop_thinking()  # 反正从哪里关闭AI都要停止计算，干脆丢在这了
+    sys.exit()
+
+
 def handle_events(main_screen: MyScreen, event) -> MyScreen:
     """
     处理事件
     """
     if event.type == pygame.QUIT:
         # 右上角的关闭按钮
-        pygame.quit()
-        CONFIG.save()
-        main_screen.exit()
-        sys.exit()
+        screen_exit(main_screen)
+
     elif event.type == pygame.VIDEORESIZE:
         # 窗口大小改变
         return main_screen.change_size()
@@ -61,7 +71,7 @@ def handle_events(main_screen: MyScreen, event) -> MyScreen:
 
 
 def main():
-    multiprocessing.freeze_support()
+    multiprocessing.freeze_support()  # 避免多进程创建多个窗口
 
     clock = pygame.time.Clock()
     pygame.display.set_icon(icon)

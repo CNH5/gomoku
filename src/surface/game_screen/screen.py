@@ -439,4 +439,3 @@ class GameScreen(MyScreen):
 
     def exit(self) -> None:
         game.save()
-        ai_chessman.stop_thinking()

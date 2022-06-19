@@ -286,9 +286,6 @@ def iter_depth(checkerboard: Checkerboard, self_is_black: bool, start=4,
 
 
 def vct(checkerboard, self_is_black: bool, max_depth=20, cache=None):
-    """
-    vct
-    """
     if cache is None:
         cache = Cache()
 
@@ -302,9 +299,6 @@ def vct(checkerboard, self_is_black: bool, max_depth=20, cache=None):
 
 
 def vcf(checkerboard, self_is_black: bool, max_depth=12, cache=None):
-    """
-    vcf
-    """
     if cache is None:  # 在函数上面的Cache是同一个...
         cache = Cache()
 
