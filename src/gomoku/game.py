@@ -1,4 +1,5 @@
 import json
+from typing import Union
 
 from src.ai import ai_chessman
 from src.ai.zobrist import zobrist
@@ -14,7 +15,7 @@ infinity_repentance = CONFIG.infinity_repentance  # 是否无限悔棋
 checkerboard = Checkerboard(row, col, forbidden_moves)  # 棋盘
 start = False  # 游戏是否已经开始
 forbidden_win = False  # 因为禁手获胜
-winner = None  # 获胜者
+winner: Union[Chessman, None] = None  # 获胜者
 win_points = []  # 导致获胜的点
 
 
@@ -107,7 +108,8 @@ def is_player_now():
     """
     判断当前应不应当是玩家操作
     """
-    return (not CONFIG.ai_enabled or CONFIG.ai_is_black ^ is_black_now()) and not ai_chessman.thinking
+    return ((not CONFIG.ai_enabled or CONFIG.ai_is_black ^ is_black_now()) and not ai_chessman.thinking) or \
+           (winner is not None and winner.can_repentance())
 
 
 def reset():
@@ -190,15 +192,22 @@ def repentance(chessman: Chessman):
     if chessman.can_repentance() and not is_draw():
         # 消耗一次悔棋次数
         chessman.use_repentance()
-        # 两边都移除一个记录
-        checkerboard.remove_piece(BLACK_CHESSMAN.pop_record())
-        checkerboard.remove_piece(WHITE_CHESSMAN.pop_record())
         global winner, forbidden_win, win_points
         if winner is not None:
             # 如果已经获胜，那就撤销胜利
             winner = None
             win_points = []
-        forbidden_win = False
+            forbidden_win = False
+            # 已经获胜那就是获胜方有操作权，移除对应棋子
+            if is_black_now():
+                checkerboard.remove_piece(WHITE_CHESSMAN.pop_record())
+            else:
+                checkerboard.remove_piece(BLACK_CHESSMAN.pop_record())
+        else:
+            # 两边都移除一个记录
+            checkerboard.remove_piece(BLACK_CHESSMAN.pop_record())
+            checkerboard.remove_piece(WHITE_CHESSMAN.pop_record())
+
         if is_black_now() and WHITE_CHESSMAN.len_records() > 0:
             return WHITE_CHESSMAN.last_point()
         elif not is_black_now():

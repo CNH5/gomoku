@@ -231,7 +231,7 @@ class GameScreen(MyScreen):
         if game.winner is None:  # 没有胜者
             if game.is_draw():
                 text = font.render("和棋!", True, CONFIG.BLACK_COLOR)
-            elif not game.is_player_now() and game.start:
+            elif not game.is_player_now() and game.start and ai_chessman.thinking:
                 text = font.render("AI思考中..", True, CONFIG.BLACK_COLOR)
             else:
                 text = font.render(f"当前棋手: {now_chessman.name}", True, CONFIG.BLACK_COLOR)
@@ -335,7 +335,7 @@ class GameScreen(MyScreen):
             (gs_conf.box_size, gs_conf.box_size)
         )
         self.restart_bt.draw(self.screen)
-        if game.now_chessman().can_repentance() and game.is_player_now() and not game.is_draw():
+        if mouse_chessman().can_repentance() and game.is_player_now() and not game.is_draw():
             self._repentance_bt.set_text("悔棋", text_size=gs_conf.button_text_size, text_color=CONFIG.BLACK_COLOR)
             self._repentance_bt.set_background_color(background_color=CONFIG.CHECKERBOARD_COLOR,
                                                      hover_background_color=CONFIG.ORANGE_COLOR1)

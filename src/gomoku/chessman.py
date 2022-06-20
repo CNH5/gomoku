@@ -61,7 +61,8 @@ class Chessman:
         """
         消耗一次悔棋机会
         """
-        self.repentance_times -= 1
+        if game.infinity_repentance:
+            self.repentance_times -= 1
 
     def can_repentance(self) -> bool:
         """

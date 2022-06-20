@@ -71,11 +71,12 @@ def get_f_renju_34(checkerboard, point: Point):
         """
         effective_renju = []
         for loc in locations:
-            for p in loc.renju.get_build_points(loc.point, loc.i):
-                is_p = check_forbidden(checkerboard, p, backup=False)[0]
-                if not is_p:  # 不是禁手点
-                    effective_renju.append(loc)
-                    break
+            it = filter(  # 筛选出阻挡点中包含禁手点的坐标,用filter比较快
+                lambda p: check_forbidden(checkerboard, p, backup=False)[0],
+                loc.renju.get_block_points(loc.point, loc.i)
+            )
+            if len(list(it)) == 0:  # 阻挡点中包含禁手点则连珠无效，也就是长度为0则有效
+                effective_renju.append(loc)
         return effective_renju
 
     if len(live3 := list(set(live3) - set(old_live3))) >= 2:

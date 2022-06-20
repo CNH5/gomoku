@@ -79,6 +79,7 @@ f_renju_live2 = (
 )
 # 禁手眠二
 f_renju_sleep2 = (
+    # 手动判断活二没必要...
     # Renju('xxxoxxooo[^x]', points_index=[4, 5], build_index=[6, 7, 8], score=sleep_2_score),
     # Renju('[^x]oooxxoxxx', points_index=[4, 5], build_index=[1, 2, 3], score=sleep_2_score),
     Renju('[^x]xooox[^x]', points_index=[1, 5], build_index=[2, 3, 4], score=sleep_2_score),
@@ -96,15 +97,14 @@ f_renju_sleep2 = (
 )
 # 禁手活三
 f_renju_live3 = (
-    # 左边堵住的活三
-    Renju('[|]oxxxoo[^x]', points_index=[2, 3, 4], build_index=[5], block_index=[1, 5, 6], score=live_3_score),
-    Renju('[^x]ooxxxoox', points_index=[3, 4, 5], build_index=[2], block_index=[1, 2, 6, 7], score=live_3_score),
     # 右边堵住的活三
-    Renju('[^x]ooxxxo[|]', points_index=[3, 4, 5], build_index=[2], block_index=[1, 2, 6], score=live_3_score),
-    Renju('xooxxxoo[^x]', points_index=[3, 4, 5], build_index=[6], block_index=[1, 2, 6, 7], score=live_3_score),
+    Renju('[^x]ooxxxo([|]|(ox))', points_index=[3, 4, 5], build_index=[2], block_index=[1, 2, 6], score=live_3_score),
     # 跳活三
     Renju('[^x]oxoxxo[^x]', points_index=[2, 4, 5], build_index=[3], block_index=[1, 3, 6], score=live_3_score),
     Renju('[^x]oxxoxo[^x]', points_index=[2, 3, 5], build_index=[4], block_index=[1, 4, 6], score=live_3_score),
+    # 左边堵住的活三
+    Renju('[|]oxxxoo[^x]', points_index=[2, 3, 4], build_index=[5], block_index=[1, 5, 6], score=live_3_score),
+    Renju('xooxxxoo[^x]', points_index=[3, 4, 5], build_index=[6], block_index=[2, 6, 7], score=live_3_score),
     # 两头活三
     Renju('[^x]ooxxxoo[^x]', points_index=[3, 4, 5], build_index=[2, 6], score=live_3_score),
 )
