@@ -59,7 +59,7 @@ def get_f_renju_34(checkerboard, point: Point):
             for match in renju.finditer(old_shape):
                 old_live3.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
         # 统计四的数量和位置
-        for renju in renju4:
+        for renju in f_renju4:
             for match in renju.finditer(line_shape):
                 renju_4.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
             for match in renju.finditer(old_shape):
@@ -78,11 +78,11 @@ def get_f_renju_34(checkerboard, point: Point):
                     break
         return effective_renju
 
-    if len(add_live3 := list(set(live3) - set(old_live3))) >= 2:
-        live3 = get_effective_renju(add_live3)
+    if len(live3 := list(set(live3) - set(old_live3))) >= 2:
+        live3 = get_effective_renju(live3)
 
-    if len(add_renju_4 := list(set(renju_4) - set(old_renju4))) >= 2:
-        renju_4 = get_effective_renju(add_renju_4)
+    if len(renju_4 := list(set(renju_4) - set(old_renju4))) >= 2:
+        renju_4 = get_effective_renju(renju_4)
     return live3, renju_4
 
 

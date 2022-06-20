@@ -129,16 +129,14 @@ f_renju_sleep_3 = (
 )
 # 禁手下的冲四和活四
 f_renju4 = (
-    # 不需要手动预判禁手点...
-    # Renju('xoxxxxo[^x]', points_index=[2, 3, 4, 5], build_index=[6], score=chong_4_score),
-    # Renju('[^x]oxxxxox', points_index=[2, 3, 4, 5], build_index=[1], score=chong_4_score),
-
     # 冲四
-    Renju('[^x]oxxxx[|]', points_index=[2, 3, 4, 5], build_index=[1], score=chong_4_score),
-    Renju('[|]xxxxo[^x]', points_index=[1, 2, 3, 4], build_index=[5], score=chong_4_score),
+    Renju('[^x]oxxxx([|]|(ox))', points_index=[2, 3, 4, 5], build_index=[1], score=chong_4_score),
     Renju('[^x]xoxxx[^x]', points_index=[1, 3, 4, 5], build_index=[2], score=chong_4_score),
     Renju('[^x]xxoxx[^x]', points_index=[1, 2, 4, 5], build_index=[3], score=chong_4_score),
     Renju('[^x]xxxox[^x]', points_index=[1, 2, 3, 5], build_index=[4], score=chong_4_score),
+    Renju('[|]xxxxo[^x]', points_index=[1, 2, 3, 4], build_index=[5], score=chong_4_score),
+    # 手动预判禁手点...
+    Renju('xoxxxxo[^x]', points_index=[2, 3, 4, 5], build_index=[6], score=chong_4_score),
     # 活四
     Renju('[^x]oxxxxo[^x]', points_index=[2, 3, 4, 5], build_index=[1, 6], score=live_4_score),
 )
