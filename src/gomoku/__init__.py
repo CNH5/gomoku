@@ -35,6 +35,21 @@ class Direction(Enum):
         def get_point(self, start: Point, d):
             return Point(start.X + self._dx * d, start.Y + self._dy * d)
 
+        # def reverse(self):
+        #     """
+        #     方向反转，但是好像不太行的样子
+        #     """
+        #     return _OneDirection(-self._dx, self._dy)
+
+        def __hash__(self):
+            return hash((self._dx, self._dy))
+
+        def __eq__(self, other):
+            if isinstance(other, self.__class__):
+                return self.__hash__() == other.__hash__()
+            else:
+                return False
+
     # 上
     UPPER = _OneDirection(-1, 0)
     # 左上

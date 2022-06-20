@@ -1,6 +1,5 @@
 from collections import namedtuple
 from copy import deepcopy
-from functools import lru_cache
 
 from src.gomoku import Point, X_MARK, NONE_MARK, get_point, RIGHT, LOWER_RIGHT, LOWER, game, BLOCK_MARK, UPPER_RIGHT
 from src.gomoku.renju.types import renju_live_3, renju4, f_renju_live3, f_renju4, renju5, renju5_, f_renju_sleep_3, \
@@ -79,8 +78,11 @@ def get_f_renju_34(checkerboard, point: Point):
                     break
         return effective_renju
 
-    live3 = get_effective_renju(list(set(live3) - set(old_live3)))
-    renju_4 = get_effective_renju(list(set(renju_4) - set(old_renju4)))
+    if len(add_live3 := list(set(live3) - set(old_live3))) >= 2:
+        live3 = get_effective_renju(add_live3)
+
+    if len(add_renju_4 := list(set(renju_4) - set(old_renju4))) >= 2:
+        renju_4 = get_effective_renju(add_renju_4)
     return live3, renju_4
 
 
@@ -239,7 +241,7 @@ def get_f_renju(old_cb, new_cb, point: Point):
     return add, loss
 
 
-# @lru_cache(maxsize=2048)  # 只有在悔棋的时候会比较快,那其实也还好?
+# @lru_cache(maxsize=2048)  # 没啥必要，变化频率太高了
 def check_forbidden(checkerboard, point: Point, get_reason=False, place_piece=True, backup=True):
     """
     判断这个点是不是禁手点
