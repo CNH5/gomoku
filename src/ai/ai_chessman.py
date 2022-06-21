@@ -1,6 +1,7 @@
 import random
 import threading
 import time
+import src.ai.compute as ai_compute
 from multiprocessing import Process, Pipe
 from src import config as CONFIG
 
@@ -64,6 +65,7 @@ def compute(p1):
     if p is None:
         # 迭代加深搜索
         p = iter_depth(checkerboard, self_is_black)
+    print(f'compute_times: {ai_compute.compute_times}')
     p1.send(p)
     thinking = False
 

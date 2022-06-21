@@ -73,10 +73,11 @@ class GameScreen(MyScreen):
         """
         重新开始
         """
+        ai_place = not game.start
         self.__reset_game()
         self._other_points = []
         self.mark = cross_img
-        if CONFIG.ai_enabled and CONFIG.ai_is_black:
+        if CONFIG.ai_enabled and CONFIG.ai_is_black and ai_place:
             # AI落子
             ai_chessman.get_point(call_back=self.set_other_point)
 

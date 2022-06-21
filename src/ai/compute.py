@@ -13,6 +13,7 @@ from src.gomoku.renju import forbidden_point_score, renju_5_score
 Node = namedtuple("Node", ["score", "depth", "point"])
 
 DEPTH = 8  # 6层太弱，8层太慢，还是搞8层算了...
+compute_times = 0
 
 
 def get_camp_renju(checkerboard, self_is_black):
@@ -205,6 +206,8 @@ def negamax(checkerboard, max_depth, self_is_black: bool, alpha=-99999999, beta=
     """
     if cache is None:
         cache = Cache()
+    global compute_times
+    compute_times += 1
     if (node := cache.get(zobrist.code)) is not None and \
             (node.depth >= max_depth or math.fabs(node.score) == renju_5_score):
         # 之前计算过同样情况下深度更大的情况，计算得到必败或必胜则有效，没有必要重复计算
