@@ -116,44 +116,44 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
         for loc in self["sleep3"]:
             atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
 
-        if not only_three and only_four:
+        if not only_three and only_four:  # VCF时
             return list(atk_p), []
 
         for loc in enemy["live3"]:  # 敌方活三的防点
             def_p = def_p | set(loc.renju.get_block_points(loc.point, loc.i))
         return list(atk_p), list(def_p)
 
-    # elif len(enemy["sleep3"]) > 0 and len(enemy["live2"]) > 0:
-    #     p_c4, p_l3, bp_43, bp_33 = set(), set(), set(), set()
-    #     for loc in enemy["sleep3"]:
-    #         p_ = set(loc.renju.get_build_points(loc.point, loc.i))
-    #         if len(p_44 := p_ & p_c4) > 0:
-    #             return [], list(p_44)[:1]
-    #         p_c4 = p_c4 | p_  # 合并冲四点
-    #
-    #     for loc in enemy["live2"]:
-    #         p_ = set(loc.renju.get_build_points(loc.point, loc.i))
-    #         if len(p_c4 & p_) > 0:  # 敌方四三点
-    #             bp_43 = bp_43 | set(loc.renju.get_block_points(loc.point, loc.i))
-    #         if len(p_l3 & p_) > 0:  # 敌方三三点
-    #             bp_33 = bp_33 | set(loc.renju.get_block_points(loc.point, loc.i))
-    #         p_l3 = p_l3 | p_
+    elif len(enemy["sleep3"]) > 0 and len(enemy["live2"]) > 0:
+        p_c4, p_l3, bp_43, bp_33 = set(), set(), set(), set()
+        for loc in enemy["sleep3"]:
+            p_ = set(loc.renju.get_build_points(loc.point, loc.i))
+            if len(p_44 := p_ & p_c4) > 0:  # 四四点,必定要防
+                return [], list(p_44)[:1]
+            p_c4 = p_c4 | p_  # 合并冲四点
 
-    #     atk_p = set()
-    #     for loc in self["sleep3"]:
-    #         atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
-    #
-    #     if len(bp_43) > 0:
-    #         return list(atk_p), list(bp_43)
-    #
-    #     if len(bp_33) > 0:
-    #         for loc in self["live2"]:
-    #             atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
-    #         return list(atk_p), list(bp_33)
+        for loc in enemy["live2"]:
+            p_ = set(loc.renju.get_build_points(loc.point, loc.i))
+            if len(p_c4 & p_) > 0:  # 敌方四三点
+                bp_43 = bp_43 | set(loc.renju.get_block_points(loc.point, loc.i))
+            if len(p_l3 & p_) > 0:  # 敌方三三点
+                bp_33 = bp_33 | set(loc.renju.get_block_points(loc.point, loc.i))
+            p_l3 = p_l3 | p_
+
+        atk_p = set()
+        for loc in self["sleep3"]:
+            atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
+
+        if len(bp_43) > 0:
+            return list(atk_p), list(bp_43)
+
+        if len(bp_33) > 0:
+            for loc in self["live2"]:
+                atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
+            return list(atk_p), list(bp_33)
 
     if only_four ^ only_three:
         # 没有必定要防的点,且在计算vct或vcf
-        if depth % 2 == 0:  # 敌方防守之后取得先手,没必要往下了
+        if depth % 2 == 0:  # 敌方取得先手,没必要往下了
             return [], []
 
         atk_p = set()
@@ -162,7 +162,7 @@ def get_consider_points(checkerboard: Checkerboard, depth: int, self_is_black: b
         if only_four:  # VCF只需要考虑冲四
             return list(atk_p), []
 
-        if only_three:  # VCT的时候需要考虑活二
+        else:  # VCT的时候需要考虑活二
             for loc in self["live2"]:
                 atk_p = atk_p | set(loc.renju.get_build_points(loc.point, loc.i))
             return list(atk_p), []
@@ -229,21 +229,21 @@ def negamax(checkerboard, max_depth, self_is_black: bool, alpha=-99999999, beta=
         # 达到最大计算深度或者不必继续往下
         return Node(evaluation(checkerboard), depth, None)
 
-    point, d1 = None, depth
-    for p in atk_p + def_p:
+    point, d1, is_vcx = None, depth, only_three ^ only_four
+    for p in set(atk_p + def_p):
         if self_is_black and checkerboard.forbidden_points().__contains__(p):
             # 黑方落子到禁手点，直接负最高分
             score = -renju_5_score  # 必败节点被剪枝，导致失误?
             d = depth
         else:
             # 落子，算分，移除棋子
-            checkerboard.place(p, game.get_piece(self_is_black))
+            checkerboard.place(p, game.get_piece(self_is_black), update_edge=not is_vcx)  # vcx时没必要更新边界点
             node = negamax(
                 checkerboard, max_depth, not self_is_black, alpha=-beta, beta=-alpha, cache=cache,
                 depth=depth + 1, only_three=only_three, only_four=only_four
             )
             score, d = -node.score, node.depth
-            checkerboard.remove_piece(p)
+            checkerboard.remove_piece(p, update_edge=not is_vcx)
         if score > alpha:
             if score >= beta:  # Alpha Beta剪枝
                 cache.save(zobrist.code, Node(alpha, max_depth, p))

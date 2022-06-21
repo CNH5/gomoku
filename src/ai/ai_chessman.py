@@ -91,6 +91,15 @@ def start_thinking(after_get):
         after_get(point)
 
 
+def stop_thinking():
+    """
+    AI停止计算
+    """
+    global thinking
+    thinking = False
+    pipe[0].send("终止运行。。")
+
+
 def start_point() -> Point:
     """
     获取开局点
@@ -146,15 +155,6 @@ def start_point() -> Point:
                     if game.can_place(point):
                         break
     return point
-
-
-def stop_thinking():
-    """
-    AI停止计算
-    """
-    global thinking
-    thinking = False
-    pipe[0].send("终止运行。。")
 
 
 def get_point(call_back):

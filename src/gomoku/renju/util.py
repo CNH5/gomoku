@@ -69,7 +69,7 @@ def get_f_renju_34(checkerboard, point: Point, shapes):
     live3 = list(set(live3) - set(old_live3))
     # 由point构成的活三
     made_live3 = filter(lambda l: l.renju.get_shape_points(l.point, l.i).__contains__(point), live3)
-    if len(list(made_live3)) >= 2:
+    if len(made_live3 := list(made_live3)) >= 2:
         eff_live3 = []
         for loc in made_live3:
             it = filter(  # 筛选出阻挡点中包含禁手点的坐标,用filter比较快

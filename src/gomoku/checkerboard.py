@@ -55,7 +55,7 @@ class Checkerboard:
                 "renju4": [],
             }
 
-        def update(self, change_point: Point, new_piece: int):
+        def update(self, change_point: Point, new_piece: int, update_edge=True):
             """
             更新禁手点和连珠,在更新棋子前调用
             """
@@ -76,7 +76,8 @@ class Checkerboard:
             #     p for p in self.forbidden_point if check_forbidden(self.checkerboard, p, backup=False)[0]
             # )
             # 更新边界点
-            self.__update_edge_points(change_point, new_piece)
+            if update_edge:
+                self.__update_edge_points(change_point, new_piece)
             # 放置或移除棋子之后修改的点
             updated_points = self.__update_forbidden_point(self.checkerboard, change_point)  # 关联点及禁手点
 
@@ -271,26 +272,26 @@ class Checkerboard:
         """
         return self.in_area(point=point) and self.get_piece(point=point) == self._none_piece
 
-    def place(self, point: Point, piece: int, simulation=False):
+    def place(self, point: Point, piece: int, simulation=False, update_edge=True):
         """
         放置棋子
         """
         if self.can_place(point):
             if not simulation:
-                self._attribute.update(point, piece)
+                self._attribute.update(point, piece, update_edge=update_edge)
                 zobrist.go(point, not game.is_black_now(self))
             self._piece_num += 1
             self._board[point.X][point.Y] = piece
         else:
             raise ValueError("棋子放置失败-_-!")
 
-    def remove_piece(self, point: Point, simulation=False):
+    def remove_piece(self, point: Point, simulation=False, update_edge=True):
         """
         移除该点上的棋子
         """
         if not self.can_place(point):
             if not simulation:
-                self._attribute.update(point, self._none_piece)
+                self._attribute.update(point, self._none_piece,update_edge=update_edge)
                 zobrist.go(point, game.is_black_now(self))  # 没必要在不必须的地方更新这个
             self._piece_num -= 1
             self._board[point.X, point.Y] = self._none_piece
