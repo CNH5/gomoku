@@ -20,11 +20,13 @@ f_key_r = (
 )
 
 
-def get_renju_5(checkerboard, point: Point, x_piece: int):
+def get_renju_5(checkerboard, point: Point, x_piece: int, shapes=None):
     """
     获取五连以及长连
     """
-    shapes, mark = checkerboard.point_shape(point, x_piece), checkerboard.get_mark(x_piece, point=point)
+    if shapes is None:
+        shapes = checkerboard.point_shape(point, x_piece)
+    mark = checkerboard.get_mark(x_piece, point=point)
     renju_5, rot = [], []
     for i in range(4):
         i_ = i + 4
@@ -40,13 +42,12 @@ def get_renju_5(checkerboard, point: Point, x_piece: int):
     return renju_5, rot
 
 
-def get_f_renju_34(checkerboard, point: Point):
+def get_f_renju_34(checkerboard, point: Point, shapes):
     """
     禁手状态下,
     如果点上已经有棋子，那就是获取放置棋子之后新增的活三和四;
     如果点上没有棋子，那就获取点周围的活三和四
     """
-    shapes = checkerboard.point_shape(point, game.BLACK_CHESSMAN.piece())
     live3, old_live3, renju_4, old_renju4 = [], [], [], []
     for i in range(4):
         i_ = i + 4  # 反方向的下标
@@ -65,59 +66,58 @@ def get_f_renju_34(checkerboard, point: Point):
             for match in renju.finditer(old_shape):
                 old_renju4.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
 
-    def get_effective_renju(locations: list[Location]):
-        """
-        获取有效的连珠
-        """
-        effective_renju = []
-        for loc in locations:
+    live3 = list(set(live3) - set(old_live3))
+    # 由point构成的活三
+    made_live3 = filter(lambda l: l.renju.get_shape_points(l.point, l.i).__contains__(point), live3)
+    if len(list(made_live3)) >= 2:
+        eff_live3 = []
+        for loc in made_live3:
             it = filter(  # 筛选出阻挡点中包含禁手点的坐标,用filter比较快
                 lambda p: check_forbidden(checkerboard, p, backup=False)[0],
                 loc.renju.get_block_points(loc.point, loc.i)
             )
             if len(list(it)) == 0:  # 阻挡点中包含禁手点则连珠无效，也就是长度为0则有效
-                effective_renju.append(loc)
-        return effective_renju
+                eff_live3.append(loc)
+        live3 = eff_live3
 
-    if len(live3 := list(set(live3) - set(old_live3))) >= 2:
-        live3 = get_effective_renju(live3)
-
-    if len(renju_4 := list(set(renju_4) - set(old_renju4))) >= 2:
-        renju_4 = get_effective_renju(renju_4)
+    renju_4 = list(filter(  # 筛选出形状点中包含中心点的连珠
+        lambda l: l.renju.get_shape_points(l.point, l.i).__contains__(point),
+        set(renju_4) - set(old_renju4)
+    ))
     return live3, renju_4
 
 
-def get_renju_34(checkerboard, point: Point, x_piece: int):
-    """
-    获取无禁手下的活三和四
-    """
-    shapes, have_piece = checkerboard.point_shape(point, x_piece), checkerboard.have_piece(point)
-    live_3, old_live3, renju_4, old_renju4 = [], [], [], []
-    for i in range(4):
-        i_ = i + 4  # 反方向的下标
-        line_shape = shapes[i] + X_MARK + "".join(reversed(shapes[i_]))
-        old_shape = shapes[i] + NONE_MARK + "".join(reversed(shapes[i_]))
-        # 统计活三的数量和位置
-        for renju in renju_live_3:
-            if have_piece:
-                for match in renju.finditer(line_shape):
-                    live_3.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
-
-            old_live3 += [
-                Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju)
-                for match in renju.finditer(old_shape)
-            ]
-        # 统计四的数量和位置
-        for renju in renju4:
-            if have_piece:
-                for match in renju.finditer(line_shape):
-                    renju_4.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
-            for match in renju.finditer(old_shape):
-                old_renju4.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
-    if have_piece:
-        return list(set(live_3) - set(old_live3)), list(set(renju_4) - set(old_renju4))  # 去重
-    else:
-        return old_live3, old_renju4
+# def get_renju_34(checkerboard, point: Point, shapes):
+#     """
+#     获取无禁手下的活三和四
+#     """
+#     have_piece = checkerboard.have_piece(point)
+#     live_3, old_live3, renju_4, old_renju4 = [], [], [], []
+#     for i in range(4):
+#         i_ = i + 4  # 反方向的下标
+#         line_shape = shapes[i] + X_MARK + "".join(reversed(shapes[i_]))
+#         old_shape = shapes[i] + NONE_MARK + "".join(reversed(shapes[i_]))
+#         # 统计活三的数量和位置
+#         for renju in renju_live_3:
+#             if have_piece:
+#                 for match in renju.finditer(line_shape):
+#                     live_3.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
+#
+#             old_live3 += [
+#                 Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju)
+#                 for match in renju.finditer(old_shape)
+#             ]
+#         # 统计四的数量和位置
+#         for renju in renju4:
+#             if have_piece:
+#                 for match in renju.finditer(line_shape):
+#                     renju_4.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
+#             for match in renju.finditer(old_shape):
+#                 old_renju4.append(Location(get_point(point, i, len(shapes[i]) - match.span()[0]), i_, renju))
+#     if have_piece:
+#         return list(set(live_3) - set(old_live3)), list(set(renju_4) - set(old_renju4))  # 去重
+#     else:
+#         return old_live3, old_renju4
 
 
 def get_mark(old_cb, new_cb, point, x_piece):
@@ -258,8 +258,10 @@ def check_forbidden(checkerboard, point: Point, get_reason=False, place_piece=Tr
     if place_piece:
         checkerboard.place(point, game.BLACK_CHESSMAN.piece(), simulation=True)
     # 获取连珠
-    live_3, renju_4 = get_f_renju_34(checkerboard, point)
-    renju_5, rot = get_renju_5(checkerboard, point, game.BLACK_CHESSMAN.piece())
+
+    shapes = checkerboard.point_shape(point, game.BLACK_CHESSMAN.piece())
+    live_3, renju_4 = get_f_renju_34(checkerboard, point, shapes)
+    renju_5, rot = get_renju_5(checkerboard, point, game.BLACK_CHESSMAN.piece(), shapes)
     # 判断是否禁手
     points = set()  # 导致禁手的坐标
     if len(renju_5) == 0:

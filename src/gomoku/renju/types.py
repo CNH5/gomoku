@@ -135,7 +135,7 @@ f_renju4 = (
     Renju('[^x]xxoxx[^x]', points_index=[1, 2, 4, 5], build_index=[3], score=chong_4_score),
     Renju('[^x]xxxox[^x]', points_index=[1, 2, 3, 5], build_index=[4], score=chong_4_score),
     Renju('[|]xxxxo[^x]', points_index=[1, 2, 3, 4], build_index=[5], score=chong_4_score),
-    # 手动预判禁手点...
+    # 手动预判禁手点...长连禁手根本没必要堵禁手点，出现两个长连禁手点白方平局绝对获胜
     Renju('xoxxxxo[^x]', points_index=[2, 3, 4, 5], build_index=[6], score=chong_4_score),
     # 活四
     Renju('[^x]oxxxxo[^x]', points_index=[2, 3, 4, 5], build_index=[1, 6], score=live_4_score),
