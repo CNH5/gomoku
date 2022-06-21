@@ -264,7 +264,7 @@ def negamax(checkerboard, max_depth, self_is_black: bool, alpha=-99999999, beta=
     return Node(alpha, d1, point)
 
 
-def iter_depth(checkerboard: Checkerboard, self_is_black: bool, start=4,
+def iter_depth(checkerboard: Checkerboard, self_is_black: bool, start=2,
                max_depth=DEPTH, cache: Cache = None, only_three=False, only_four=False):
     """
     迭代加深
