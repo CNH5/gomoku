@@ -1,6 +1,8 @@
 from src.gomoku.renju import Renju, live_2_score, sleep_2_score, live_3_score, sleep_3_score, chong_4_score, \
     live_4_score, renju_5_score
 
+# TODO: 把这些类型转为Enum
+
 # 无禁手活二
 renju_live_2 = (
     Renju('[|]oxxooo', points_index=[2, 3], build_index=[4, 5], block_index=[1, 4, 5, 6], score=live_2_score),

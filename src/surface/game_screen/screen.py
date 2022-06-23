@@ -73,7 +73,9 @@ class GameScreen(MyScreen):
         """
         重新开始
         """
-        ai_place = not game.start
+        ai_place = not (game.start and ai_chessman.thinking)
+        if ai_chessman.thinking:
+            ai_chessman.stop_thinking()
         self.__reset_game()
         self._other_points = []
         self.mark = cross_img
