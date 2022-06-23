@@ -86,7 +86,7 @@ def start_thinking(after_get):
     point = pipe[0].recv()
     stop_thinking()  # 终止计算
     print(f"time: {time.time() - t1}, best point: {point}")
-    if point is not None:
+    if point is not None and game.start:
         game.place(point, game.now_chessman())  # 无所谓了，反正鼠标不能放置棋子，棋盘不会变动，现在的棋手也不会有变动
 
     if after_get is not None:
@@ -98,8 +98,9 @@ def stop_thinking():
     AI停止计算
     """
     global thinking
+    if thinking:
+        pipe[0].send("终止运行。。")
     thinking = False
-    pipe[0].send("终止运行。。")
 
 
 def start_point() -> Point:
