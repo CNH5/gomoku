@@ -64,6 +64,9 @@ class GameScreen(MyScreen):
             # 游戏已经开始了，行数和列数可能不太一样，要重新设置
             gs_conf.init_location(game.row, game.col)
 
+        if not game.is_player_now():
+            ai_chessman.get_point(call_back=self.set_other_point)
+
     def __reset_game(self):
         gs_conf.init_location(CONFIG.row_points, CONFIG.col_points)
         self.__re_init_buttons()
